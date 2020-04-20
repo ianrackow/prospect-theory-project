@@ -2,7 +2,7 @@ from flask import Flask, render_template, request
 from scipy.optimize import curve_fit
 
 
-app = Flask(__name__)
+from app import app
 
 
 @app.route('/', methods=['GET', 'POST'])
@@ -32,8 +32,6 @@ def submit():
 
     gamma = weight_regression(probs, cx)
 
-    print(probs, cx, gamma)
-
     return render_template("results.html", gamma=gamma, data=points)
 
 
@@ -41,8 +39,6 @@ def submit():
 def weight_regression(probs, weights):
 
     popt, pcov = curve_fit(tk, probs, weights, bounds=(0, 1))
-
-    print(popt, pcov)
 
     return popt[0]
 
@@ -52,5 +48,6 @@ def tk(x, g):
 
     return (x**g) / ((x**g + (1 - x)**g)**(1/g))
 
+
 if __name__ == '__main__':
-    app.run()
+    app.run(debug=True)
