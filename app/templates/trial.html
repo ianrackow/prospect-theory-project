@@ -1,0 +1,557 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Trials</title>
+
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/2.1.1/jquery.min.js"></script>
+    <script src="https://cdn.rawgit.com/mgalante/jquery.redirect/master/jquery.redirect.js"></script>
+    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.4.1/css/bootstrap.min.css">
+    <script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.4.1/js/bootstrap.min.js"></script>
+
+    <script src="https://polyfill.io/v3/polyfill.min.js?features=es6"></script>
+    <script id="MathJax-script" async src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
+
+</head>
+
+
+
+<script>
+
+    function shuffle(array) {
+        var currentIndex = array.length, temporaryValue, randomIndex;
+
+        // While there remain elements to shuffle...
+        while (0 !== currentIndex) {
+
+            // Pick a remaining element...
+            randomIndex = Math.floor(Math.random() * currentIndex);
+            currentIndex -= 1;
+
+            // And swap it with the current element.
+            temporaryValue = array[currentIndex];
+            array[currentIndex] = array[randomIndex];
+            array[randomIndex] = temporaryValue;
+        }
+
+        return array;
+    }
+
+    function updateTable(table, upper, lower){
+        var t = document.getElementById(table);
+        var step = (upper - lower) / 5;
+        var row, new_val;
+        for (var i = 1; i < 7; i++){
+            row = t.rows[i].cells;
+            new_val = upper - ((i - 1) * step);
+            row[0].innerHTML = new_val;
+            row[1].firstElementChild.value = new_val;
+            row[2].firstElementChild.value = new_val;
+        }
+
+
+        $("table#" + table + " input:checked").slice(1, -1).each(function(){
+            $(this).prop("checked", false);
+        });
+
+    }
+
+    function refine() {
+        console.log("here");
+        var play = [];
+        var pass = [];
+        $("table#checkboxes1 input[name='sure[]']:checked").each(function(){
+           pass.push($(this).val());
+        });
+        $("table#checkboxes1 input[name='gamble[]']:checked").each(function(){
+           play.push($(this).val());
+        });
+        console.log(pass, play);
+        var upper = parseInt(pass[pass.length - 1]);
+        var lower = parseInt(play[0]);
+
+        console.log(pass, play, upper, lower);
+
+        if (lower > upper){
+            valid1 = false;
+            alert("Irrational Choice Set");
+            $("table#checkboxes1 input:checked").slice(1, 5).each(function(){
+                $(this).prop("checked", false);
+            });
+            $('#checkboxes2').css('display', 'none');
+        } else {
+            updateTable("checkboxes2", upper, lower);
+            $('#checkboxes2').css('display', '');
+        }
+
+
+
+    }
+
+    function nextGamble() {
+
+        var play = [];
+        var pass = [];
+        $("table#checkboxes2 input[name='sure[]']:checked").each(function(){
+           pass.push($(this).val());
+        });
+        $("table#checkboxes2 input[name='gamble[]']:checked").each(function(){
+           play.push($(this).val());
+        });
+
+
+        console.log(pass, play);
+        var upper = parseInt(pass[pass.length - 1]);
+        var lower = parseInt(play[0]);
+
+        console.log(pass, play, upper, lower);
+
+        if (lower > upper){
+            alert("Irrational Choice Set");
+            $('#next').prop("disabled", "disabled");
+            $("table#checkboxes2 input:checked").slice(1, 5).each(function(){
+                $(this).prop("checked", false);
+            });
+        } else {
+            results.push([curr_amount, curr_probability, upper, lower]);
+            curr_gamble++;
+
+            var new_percent = (100 * curr_gamble / total_gambles).toFixed(2);
+
+            if (new_percent >= 5){
+                $('#skip').css("display", "");
+            }
+
+            $('#myBar').html("&nbsp;"+new_percent+"%&nbsp;");
+            $('#myBar').css('width', new_percent + "%");
+
+            if (curr_gamble == total_gambles){
+                submit();
+                return;
+            } else {
+
+                if (curr_gamble + 1 == total_gambles){
+                    $('#next').html("Submit");
+                } else {
+                    $('#next').html("Next Gamble (" + (curr_gamble + 1) + "/" + total_gambles + ")");
+                }
+
+                curr_amount = gambles[curr_gamble][0];
+                curr_probability = gambles[curr_gamble][1];
+
+                $("#cg").html("(" + curr_amount + ", " + curr_probability.toFixed(2) + ", 0, " + (1 - curr_probability).toFixed(2) + ")");
+                $("#ev").html("" + (curr_amount * curr_probability));
+
+            }
+
+            $('#checkboxes2').css('display', 'none');
+            updateTable("checkboxes1", curr_amount, 0);
+            $('#next').prop("disabled", "disabled");
+        }
+
+    }
+
+    function submit(){
+        console.log("Submitting...");
+
+        var form = document.createElement('form');
+        document.body.appendChild(form);
+        form.method = 'POST';
+        form.action = '/submit';
+
+        var input = document.createElement('input');
+        input.type = 'hidden';
+        input.name = 'results';
+        input.value = results;
+        form.appendChild(input);
+        form.submit();
+
+    }
+
+    $(function(){
+       $('td').click(function (event) {
+         if (!$(event.target).is('input')) {
+            var obj = $(this).find('input');
+
+            if (!obj.prop('disabled')){
+                obj.prop('checked', !obj.is(':checked'));
+                obj.change();
+            }
+           }
+       });
+    });
+
+    $( document ).ready(function() {
+        $('input[type="checkbox"]').on('change', function() {
+          var checkedValue = $(this).prop('checked');
+            // uncheck sibling checkboxes (checkboxes on the same row)
+            $(this).closest('tr').find('input[type="checkbox"]').each(function(){
+               $(this).prop('checked',false);
+            });
+
+            $(this).prop("checked",checkedValue);
+            console.log(this.className, $('.f1:checked').length, $('.f1').length / 2);
+           if (this.className == 'f1' && $('.f1:checked').length == $('.f1').length / 2) {
+            console.log("ref");
+            refine();
+           } else if (this.className == 'f1') {
+            $('#checkboxes2').css('display', 'none');
+            $('#next').prop("disabled", "disabled");
+           } else if ($("table#checkboxes2 input:checked").length == 6) {
+            $('#next').prop("disabled", "");
+           } else {
+            $('#next').prop("disabled", "disabled");
+           }
+
+        });
+
+    });
+
+</script>
+
+<style>
+
+    .row {
+      margin: auto;
+      display: flex;
+      width: 70%;
+      justify-content: center;
+      margin-top: 10px;
+      margin-bottom: 15px;
+    }
+
+    .column {
+      display: flex;
+      flex: 50%;
+      justify-content: center;
+    }
+
+    td:nth-child(1) {
+      text-align: right;
+    }
+
+    td:nth-child(2) {
+      text-align: center;
+    }
+
+    td:nth-child(3) {
+      text-align: center;
+    }
+
+    #myBar {
+      width: 0%;
+      height: 30px;
+      background-color: #4CAF50;
+      text-align: center; /* To center it horizontally (if you want) */
+      line-height: 30px; /* To center it vertically */
+      color: black;
+
+    }
+
+    #myProgress {
+      margin: auto;
+      width: 30%;
+      border-radius: 15px;
+      border-style: solid;
+      overflow: hidden;
+      margin-top: 10px;
+      margin-bottom: 10px;
+    }
+
+    html, body {
+        height: 100%;
+    }
+    .main {
+        height: 100%;
+        width: 100%;
+        display: table;
+    }
+    .wrapper {
+        display: table-cell;
+        height: 100%;
+        vertical-align: middle;
+    }
+
+    th {
+        text-align: center;
+        padding: 3px;
+    }
+
+    .instructions {
+        margin-top: 20px;
+        padding-bottom: 50px;
+        display: inline-block;
+        width: 70%;
+        margin: auto;
+    }
+
+    .centerBlock {
+      display: table;
+      margin:0 auto;
+    }
+
+    .container {
+      display: flex;
+      justify-content: center;
+    }
+
+
+</style>
+
+
+<body align="" style="background-color:#F4F4E3;">
+
+<div class="container">
+
+    <div class="instructions">
+
+        <div class="centerBlock">
+                <h4 class="">Instructions</h4>
+        </div>
+        <p>
+            You will be shown a series of potential gambles of the form \((v, p, 0, 1 - p)\). For each of these, choosing to play
+            the gamble will result in a \( p \) probability of winning \( v \) dollars, or otherwise receiving nothing.
+            The expected value of playing such a gamble is also shown for you for your convenience.
+        <p>
+            You will then be shown a table of values, with a choice. For each value, you can either take that amount as a 'sure thing',
+            or you can choose to play the gamble. For each gamble, you are tasked with marking each row of the table with your preference
+            for taking that amount as a sure thing or playing the given gamble. Once you have marked all rows in the first table,
+            a second table will appear with a refined range. Once you have marked preferences in the second table, click 'Next Gamble'
+            to move to the next set of choices.
+        <p>
+            There are 28 gambles in total, but if you don't want to complete all of them, an option to skip to the results will appear
+            after 2 gambles are completed.
+        </p>
+
+
+
+    </div>
+</div>
+
+<center>
+    Current Gamble: <b id="cg">(100, 0.5, 0, 0.5)</b><br>
+    Expected Value of Choosing Gamble: <b id="ev">50</b>
+
+    <div class="row mt-30">
+        <div class="column">
+            <table id="checkboxes1" border="1">
+                <tr>
+                    <th>
+                        Money (no gamble)
+                    </th>
+                    <th>
+                        Prefer Sure Thing
+                    </th>
+                    <th>
+                        Prefer Gamble
+                    </th>
+                </tr>
+                <tr>
+                    <td id="v1">
+                        100
+                    </td>
+                    <td>
+                        <input class="f1" type="checkbox" name="sure[]"  checked="true" value="100" disabled="disabled"/>
+                    </td>
+                    <td>
+                        <input class="f1" type="checkbox" name="gamble[]" value="100" disabled="disabled"/>
+                    </td>
+                </tr>
+                <tr>
+                    <td id="v2">
+                        80
+                    </td>
+                    <td>
+                        <input class="f1" type="checkbox" name="sure[]" value="80" />
+                    </td>
+
+                    <td>
+                        <input class="f1" type="checkbox" name="gamble[]" value="80" />
+                    </td>
+                </tr>
+                    <tr>
+                    <td id="v3">
+                        60
+                    </td>
+                    <td>
+                        <input class="f1" type="checkbox" name="sure[]" value="60" />
+                    </td>
+
+                    <td>
+                        <input class="f1" type="checkbox" name="gamble[]" value="60" />
+                    </td>
+                </tr>
+                    <tr>
+                    <td id="v4">
+                        40
+                    </td>
+                    <td>
+                        <input class="f1" type="checkbox" name="sure[]" value="40" />
+                    </td>
+
+                    <td>
+                        <input class="f1" type="checkbox" name="gamble[]" value="40" />
+                    </td>
+                </tr>
+                    <tr>
+                    <td id="v5">
+                        20
+                    </td>
+                    <td>
+                        <input class="f1" type="checkbox" name="sure[]" value="20" />
+                    </td>
+
+                    <td>
+                        <input class="f1" type="checkbox" name="gamble[]" value="20" />
+                    </td>
+                </tr>
+                    <tr>
+                    <td id="v6">
+                        0
+                    </td>
+                    <td>
+                        <input class="f1" type="checkbox" name="sure[]" value="0" disabled="disabled"/>
+                    </td>
+
+                    <td>
+                        <input class="f1" type="checkbox" name="gamble[]" checked="true" value="0" disabled="disabled"/>
+                    </td>
+                </tr>
+            </table>
+        </div>
+        <div class="column">
+            <table id="checkboxes2" border="1" style="display: none;">
+                <tr>
+                    <th>
+                        Money (no gamble)
+                    </th>
+                    <th>
+                        Prefer Sure Thing
+                    </th>
+                    <th>
+                        Prefer Gamble
+                    </th>
+                </tr>
+                <tr>
+                    <td id="w1">
+                        60
+                    </td>
+                    <td>
+                        <input type="checkbox" name="sure[]"  checked="true" value="60" disabled="disabled" />
+                    </td>
+                    <td>
+                        <input type="checkbox" name="gamble[]" value="60" disabled="disabled" />
+                    </td>
+                </tr>
+                <tr>
+                    <td id="w2">
+                        56
+                    </td>
+                    <td>
+                        <input type="checkbox" name="sure[]" value="56" />
+                    </td>
+
+                    <td>
+                        <input type="checkbox" name="gamble[]" value="56" />
+                    </td>
+                </tr>
+                    <tr>
+                    <td id="w3">
+                        52
+                    </td>
+                    <td>
+                        <input type="checkbox" name="sure[]" value="52" />
+                    </td>
+
+                    <td>
+                        <input type="checkbox" name="gamble[]" value="52" />
+                    </td>
+                </tr>
+                    <tr>
+                    <td id="w4">
+                        48
+                    </td>
+                    <td>
+                        <input type="checkbox" name="sure[]" value="48" />
+                    </td>
+
+                    <td>
+                        <input type="checkbox" name="gamble[]" value="48" />
+                    </td>
+                </tr>
+                    <tr>
+                    <td id="w5">
+                        44
+                    </td>
+                    <td>
+                        <input type="checkbox" name="sure[]" value="44" />
+                    </td>
+
+                    <td>
+                        <input type="checkbox" name="gamble[]" value="44" />
+                    </td>
+                </tr>
+                    <tr>
+                    <td id="w6">
+                        40
+                    </td>
+                    <td>
+                        <input type="checkbox" name="sure[]" value="40" disabled="disabled"/>
+                    </td>
+
+                    <td>
+                        <input type="checkbox" name="gamble[]" checked="true" value="40" disabled="disabled"/>
+                    </td>
+                </tr>
+            </table>
+        </div>
+    </div>
+
+    <button id="next" onclick="nextGamble()" disabled="disabled">Next Gamble</button><br>
+
+</center>
+
+<div id="myProgress">
+  <div id="myBar">&nbsp;0%&nbsp;</div>
+</div>
+
+<br>
+<center>
+    <button id="skip" onclick="submit()" style="display: none;">I'm Bored, Skip to My Results</button>
+</center>
+
+
+
+
+<script>
+
+    var gambles =
+        [
+            [50, 0.05], [50, 0.1], [50, 0.25], [50, 0.5], [50, 0.75], [50, 0.9], [50, 0.95],
+            [100, 0.05], [100, 0.1], [100, 0.25], [100, 0.5], [100, 0.75], [100, 0.9], [100, 0.95],
+            [200, 0.05], [200, 0.1], [200, 0.25], [200, 0.5], [200, 0.75], [200, 0.9], [200, 0.95],
+            [400, 0.05], [400, 0.1], [400, 0.25], [400, 0.5], [400, 0.75], [400, 0.9], [400, 0.95]
+        ];
+    shuffle(gambles);
+    var total_gambles = gambles.length;
+
+    var curr_gamble, curr_amount, curr_probability;
+    curr_gamble = 0;
+    curr_amount = gambles[0][0];
+    curr_probability = gambles[0][1].toFixed(2);
+
+    $("#cg").html("(" + curr_amount + ", " + curr_probability + ", 0, " + (1 - curr_probability).toFixed(2) + ")");
+    $("#ev").html("" + (curr_amount * curr_probability));
+
+    document.getElementById('next').innerHTML = "Next Gamble (" + (curr_gamble + 1) + "/" + total_gambles + ")";
+
+    var results = []
+
+    updateTable("checkboxes1", curr_amount, 0);
+
+
+</script>
+
+
+</body>
+</html>

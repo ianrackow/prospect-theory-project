@@ -1,0 +1,144 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Deriving Weighting Parameters</title>
+    <script src="https://d3js.org/d3.v3.min.js"></script>
+    <script src="https://mauriciopoppe.github.io/function-plot/js/function-plot.js"></script>
+
+    <script src="https://polyfill.io/v3/polyfill.min.js?features=es6"></script>
+    <script id="MathJax-script" async src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
+
+    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.4.1/css/bootstrap.min.css">
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.4.1/jquery.min.js"></script>
+    <script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.4.1/js/bootstrap.min.js"></script>
+
+</head>
+
+<script>
+
+function plot(gamma){
+    functionPlot({
+        title: "Example Weighting Functions",
+        target: "#otherFunction",
+        xAxis: {domain: [-0.05, 1.02]},
+        yAxis: {domain: [-0.05, 1.02]},
+        grid: true,
+        disableZoom: true,
+        tip: {
+            renderer: function (x, y, index){
+                var opts = ["w(p) = p", "(" + gamma + ")", "C-H '94 (0.56)", "T-K '92 (0.61)", "W-G '96 (0.71)"];
+                return opts[index] + ": (" + x.toFixed(2) + ", " + y.toFixed(2) + ")";
+            }
+        },
+        data: [
+            {fn: 'x', color: 'gray', range: [0, 1]},
+            {fn: 'nthRoot(x,(1 / ' + gamma + ')) / nthRoot(nthRoot(x, (1 / ' + gamma + ')) + nthRoot(1 - x, 1 / ' + gamma + '), ' + gamma + ')',
+                color: 'blue', range: [0, 1]},
+            {fn: 'nthRoot(x,(1 / .56)) / nthRoot(nthRoot(x, (1 / .56)) + nthRoot(1 - x, 1 / 0.56), 0.56)', color: 'green'},
+            {fn: 'nthRoot(x,(1 / .61)) / nthRoot(nthRoot(x, (1 / .61)) + nthRoot(1 - x, 1 / 0.61), 0.61)', color: 'orange'},
+            {fn: 'nthRoot(x,(1 / .71)) / nthRoot(nthRoot(x, (1 / .71)) + nthRoot(1 - x, 1 / 0.71), 0.71)', color: 'purple'}
+
+
+        ]
+
+    });
+
+    $('.title').attr('font-size', 20)
+    $('.top-right-legend').remove();
+}
+
+function update(val){
+
+    plot(val);
+    document.getElementById("rangeLabel").innerHTML = "" + parseFloat(val).toFixed(2);
+}
+
+</script>
+<style>
+    .centerBlock {
+      display: table;
+      margin: auto;
+    }
+
+    .mycontent-left {
+      border-right: 1px dashed #333;
+    }
+
+    .mycontent-right {
+      border-left: 1px dashed #333;
+    }
+
+    p {
+        text-indent: 20pt;
+    }
+
+</style>
+
+<body onload="plot(1.0);" style="background-color:#F4F4E3;">
+
+<center>
+    <h2>Prospect Theory and the Weighting Function</h2>
+    <h4>By Ian Rackow, CLPS 0220 Spring 2020 </h4>
+    <br />
+</center>
+<div class="container-fluid">
+    <div class="row">
+        <div class="col-sm-6">
+            <div style="width: 90%; margin: auto;">
+                <div class="centerBlock">
+                    <h4>Background</h4>
+                </div>
+                <p>
+                    In 1979, Daniel Kahneman and Amos Tversky published a novel theory of behavioral economics called
+                    Prospect Theory, recognizing that Expected Utility Theory failed as a descriptive theory of human behavior.
+                    Among the evidence that led to the development of the theory was the observation that people don't actually
+                    evaluate probabilities in a linear manner, instead over-weighting probabilities in the range close to 0, and
+                    under-weighting probabilities on the higher end.
+                <p>
+                    To formalize the theory, they introduced a probability weighting function (denoted \( w(p) \)) that
+                    mathematically reflected the behavior they were observing. However, the function relies on a parameter,
+                    \( \gamma \), that fine tunes the shape of the weighting function. Many researchers, including Tversky
+                    and Kahneman, have performed experimental studies seeking to empirically derive a value for \( \gamma \),
+                    three of which are shown in the graph to the right. Other researchers have developed other functional forms
+                    for the weighting function in the years since that are more complicated or have multiple parameters,
+                    but Tversky and Kahneman's remains amongst the most easily understood and easy to perform analysis with to this day.
+                <p>
+                This site allows you to be a subject in a trial using an experimental design used by Tversky and Kahneman (and others)
+                to derive that parameter. Note that it uses a constant reference level of zero in the experiment, and all prospects
+                are positive, since we are focusing on weighting functions and not value functions or loss aversion.
+                </p>
+            </div>
+        </div>
+        <div class="col-sm-6 mycontent-right">
+            <div class="centerBlock">
+                <div id="otherFunction"></div>
+            </div>
+            <div class="centerBlock">
+                <label for="customRange3">\( \gamma = {}\)</label><text style="color: blue;" id="rangeLabel">1.00</text> (slide to change)
+                <input id="slider" type="range" class="custom-range" style="width: 100%;" min="0" max="1" step="0.01" id="customRange3" value="1" oninput="update(this.value);">
+                <ul style="list-style-type:none;">
+                    <li>$$ w^{+}(p) = \frac{p^{\gamma}}{(p^{\gamma} + (1 - p)^{\gamma})^{1/\gamma}} $$</li>
+                    <li style="color:green;">Camerer-Ho (1994): \( \gamma = 0.56 \)</li>
+                    <li style="color:orange;">Tversky-Kahneman (1992): \( \gamma = 0.61 \)</li>
+                    <li style="color:purple;">Wu-Gonzalez (1996): \( \gamma = 0.71 \)</li>
+                    <li style="color:gray;">Expected Utility Theory (Linear): \( \gamma = 1.0 \)</li>
+                </ul>
+            </div>
+        </div>
+    </div>
+
+    <br>
+    <div class="centerBlock">
+        <button type="button" class="btn btn-primary btn-lg" onclick="window.location.href='/test'">
+            Start the trial!
+        </button>
+    </div>
+
+</div>
+
+
+
+
+</body>
+</html>

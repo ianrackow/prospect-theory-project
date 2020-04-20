@@ -1,0 +1,129 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Results</title>
+    <script src="https://d3js.org/d3.v3.min.js"></script>
+    <script src="https://mauriciopoppe.github.io/function-plot/js/function-plot.js"></script>
+
+    <script src="https://polyfill.io/v3/polyfill.min.js?features=es6"></script>
+    <script id="MathJax-script" async src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
+    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.4.1/css/bootstrap.min.css">
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.4.1/jquery.min.js"></script>
+    <script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.4.1/js/bootstrap.min.js"></script>
+
+<script>
+
+function plot() {
+
+    functionPlot({
+        title: "Your Probability Weighting Function",
+        target: "#myFunction",
+        xAxis: {domain: [-0.05, 1.02]},
+        yAxis: {domain: [-0.05, 1.02]},
+        width: 550,
+        height: 550,
+        grid: true,
+        disableZoom: true,
+        data: [
+            {fn: 'nthRoot(x,(1 / {{gamma}})) / nthRoot(nthRoot(x, (1 / {{gamma}})) + nthRoot(1 - x, 1 / {{gamma}}), {{gamma}})', color: 'red'},
+            {fn: 'x', color: 'gray', range: [0, 1]},
+            {points: {{ data }}, fnType: 'points', graphType: 'scatter', color: 'blue'}
+        ]
+
+    });
+
+    functionPlot({
+        title: "Other Experiments",
+        target: "#otherFunction",
+        xAxis: {domain: [-0.05, 1.02]},
+        yAxis: {domain: [-0.05, 1.02]},
+        width: 550,
+        height: 550,
+        grid: true,
+        disableZoom: true,
+        tip: {
+            renderer: function (x, y, index){
+                var opts = ["C-H '94 (0.56): ", "T-K '92 (0.61): ", "W-G '96 (0.71): ", "w(p) = p: "];
+                return opts[index] + "(" + x.toFixed(2) + ", " + y.toFixed(2) + ")";
+            }
+        },
+        data: [
+            {fn: 'nthRoot(x,(1 / .56)) / nthRoot(nthRoot(x, (1 / .56)) + nthRoot(1 - x, 1 / 0.56), 0.56)', color: 'green'},
+            {fn: 'nthRoot(x,(1 / .61)) / nthRoot(nthRoot(x, (1 / .61)) + nthRoot(1 - x, 1 / 0.61), 0.61)', color: 'orange'},
+            {fn: 'nthRoot(x,(1 / .71)) / nthRoot(nthRoot(x, (1 / .71)) + nthRoot(1 - x, 1 / 0.71), 0.71)', color: 'purple'},
+            {fn: 'x', color: 'gray', range: [0, 1]}
+        ]
+
+    });
+
+    $('circle').each(function(){
+        $(this).attr("r", 2);
+    });
+
+    $('.title').attr('font-size', 20);
+    $('.top-right-legend').remove();
+
+}
+
+</script>
+
+
+</head>
+
+
+<style>
+    .row {
+      margin: auto;
+      width: 80%;
+      display: flex;
+      justify-content: center;
+      padding-bottom: 10px;
+    }
+
+    .column {
+      display: flex;
+      flex: 50%;
+      justify-content: center;
+    }
+</style>
+
+<body onload="plot()" style="background-color:#F4F4E3;">
+<center>
+
+    <h3>Results</h3>
+    <div class="row">
+        <div class="column">
+            <section id="myPlot">
+                <div id="myFunction"></div>
+            </section>
+
+        </div>
+        <div class="column">
+            <section id="otherPlot">
+                <div id="otherFunction"></div>
+            </section>
+        </div>
+    </div>
+    <div class="row">
+        <div class="column">
+            $$ w^{+}(p) = \frac{p^{\gamma}}{(p^{\gamma} + (1 - p)^{\gamma})^{1/\gamma}}, \gamma = {{gamma}} $$
+        </div>
+        <div class="column">
+            <ul style="list-style-type:none;">
+                <li style="color:green;">Camerer-Ho (1994): \( \gamma = 0.56 \)</li>
+                <li style="color:orange;">Tversky-Kahneman (1992): \( \gamma = 0.61 \)</li>
+                <li style="color:purple;">Wu-Gonzalez (1996): \( \gamma = 0.71 \)</li>
+                <li style="color:gray;">Expected Utility Theory (Linear): \( \gamma = 1.0 \)</li>
+            </ul>
+        </div>
+    </div>
+
+    <button onclick="window.location.href = '/test'" >Try the experiment again!</button>
+    <button onclick="window.location.href = '/'">Return to home page</button>
+
+
+</center>
+
+</body>
+</html>
